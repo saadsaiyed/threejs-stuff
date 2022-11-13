@@ -1,4 +1,4 @@
-@import url("./static/fonts/googlefonts.css");
+@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@200&family=Ubuntu+Mono&display=swap");
 #app {
     font-family: Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;

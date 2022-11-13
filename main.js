@@ -1,5 +1,4 @@
 import './style.css'
-import './function.js'
 import "devicon/devicon.min.css";
 import { AxesHelper, BufferAttribute, BufferGeometry, Clock, DirectionalLight, DirectionalLightHelper, DoubleSide, FlatShading, Float32BufferAttribute, Group, MathUtils, Mesh, MeshBasicMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry, PointLight, Points, PointsMaterial, Scene, SphereGeometry, SpotLight, SpotLightHelper, Vector3, WebGLRenderer } from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
@@ -11,6 +10,7 @@ import * as dat from 'dat.gui'
 const gui = new dat.GUI();
 
 //Initiate scene - START
+
     const world = {
         plane: {
             width: 400,
@@ -21,14 +21,14 @@ const gui = new dat.GUI();
         },
         sphere: {
             radius: 30,
-            widthSegments:  32,
+            widthSegments: 33,
             heightSegments: 16,
             position: new Vector3(0, 0, 0)
         },
         pointLight: {
-            color: 0x55ff99,
+            color: 0xffffff,
             intensity: 2,
-            position: new Vector3(0, 0, 10)
+            position: new Vector3(0, 0, 40)
         }
     }    
 
@@ -46,12 +46,12 @@ const gui = new dat.GUI();
         0.1,
         1000
     );
-    camera.position.z = 90;
+camera.position.z = 70;
 
     const renderer = new WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(devicePixelRatio);
-    document.body.appendChild(renderer.domElement);
+document.body.appendChild(renderer.domElement); //Adding to HTML
     
     const controls = new OrbitControls( camera, renderer.domElement );
 
@@ -100,23 +100,25 @@ const gui = new dat.GUI();
                 side: DoubleSide
             })
         );
-        world.sphere.position.set(sphere.position.x, -(world.plane.height + world.sphere.radius), world.sphere.radius);
+world.sphere.position.set(sphere.position.x, sphere.position.y, sphere.position.z);
         sphere.position.copy(world.sphere.position);
         sphere.rotation.z += Math.PI / 2;
-        sphere.rotation.x += Math.PI;
+sphere.rotation.x += (Math.PI);
         vertexSphere.add(sphere);
         generateSphere();
-        
+
         var GUISphere = gui.addFolder('Sphere'); 
         GUISphere.add(sphere, 'visible')
         var GUISpherePosition = GUISphere.addFolder('Position'); 
             GUISpherePosition.add(sphere.position, 'x').min(world.sphere.position.x - 100).max(world.sphere.position.x + 100).step(0.1).name('x')
             GUISpherePosition.add(sphere.position, 'y').min(world.sphere.position.y - 100).max(world.sphere.position.y + 100).step(0.1).name('y')
             GUISpherePosition.add(sphere.position, 'z').min(world.sphere.position.z - 100).max(world.sphere.position.z + 100).step(0.1).name('z')
+GUISpherePosition.add(sphere.rotation, 'x').min(0).max(2 * Math.PI).step(0.1).name('rotate')
         var GUISphereGeometry = GUISphere.addFolder('Geometry'); 
             GUISphereGeometry.add(world.sphere, 'radius').min(world.sphere.radius - 100).max(world.sphere.radius + 100).step(1).name('radius').onChange(generateSphere)
             GUISphereGeometry.add(world.sphere, 'widthSegments').min(world.sphere.widthSegments - 100).max(world.sphere.widthSegments + 100).step(1).name('widthSegments').onChange(generateSphere)
             GUISphereGeometry.add(world.sphere, 'heightSegments').min(world.sphere.heightSegments - 100).max(world.sphere.heightSegments + 100).step(1).name('heightSegments').onChange(generateSphere)
+
     //Sphere - END
 
     //Particle - START
@@ -166,7 +168,7 @@ const gui = new dat.GUI();
         pointLight.position.set(
             world.pointLight.position.x,
             world.pointLight.position.y,
-            world.pointLight.position.z
+            world.pointLight.position.z + 20
         );
         vertexPlane.add(pointLight);
         
@@ -175,10 +177,15 @@ const gui = new dat.GUI();
         directionalLightTop.position.set(0, 10, 10);
         directionalLightTop.intensity = 0;
         
-        const tempLight1 = new DirectionalLight( 0xFFFFFF, 1);
+const tempLight1 = new DirectionalLight(0xFFFFFF, 1);
         vertexSphere.add( tempLight1 );
         tempLight1.position.set(10, 10, 10);
-        tempLight1.intensity = 0;
+tempLight1.intensity = 1;
+
+const tempLight2 = new DirectionalLight(0xFFFFFF, 1);
+vertexSphere.add(tempLight2);
+tempLight2.position.set(-10, 10, 10);
+tempLight2.intensity = 1;
 
     //Lighting - END
 
@@ -196,16 +203,16 @@ const gui = new dat.GUI();
 //Initiate scene - END
 
 //GUI Settings - START
-    // plane.visible = false
+plane.visible = false
     // sphere.visible = false
     // particle.visible = false
-    gui.__proto__.constructor.toggleHide()
+    // gui.__proto__.constructor.toggleHide()
 
     // GUIPlane.open();
     GUIPlanePosition.open();
     GUIPlaneGeometry.open();
 
-    // GUISphere.open();
+GUISphere.open();
     GUISpherePosition.open();
     GUISphereGeometry.open();
 //GUI Settings - END
@@ -258,12 +265,17 @@ function generateSphere() {
     // Adding vertices - START
         const randomValues = [];
         const { array } = sphere.geometry.attributes.position;
+    console.log(array);
         for (let i = 0; i < array.length; i++) {
             if (i % 3 == 0) {
                 const x = array[i]        
                 const y = array[i+1]        
                 const z = array[i+2]        
-                if ((Math.abs(array[i + 1]) == world.sphere.radius) || (i % (world.sphere.radius+1) == 0) || ((i + 3) % (world.sphere.radius+1) == 0) ) {
+                if (
+                    (Math.abs(array[i + 1]) == world.sphere.radius) || // This is for top and bottom of sphere
+                    (i % (world.sphere.widthSegments + 1) == 0) ||
+                    ((i + 3) % (world.sphere.widthSegments + 1) == 0)
+                ) {
                 }
                 else {
                     array[i] = x + (Math.random() - 0.5) * 3
@@ -306,7 +318,7 @@ function animate() {
     //Moving Sphere with individual vertices - START
         frameSphere += 0.1;
         var {array, originalPosition, randomValues} = sphere.geometry.attributes.position
-        for (let i = 0; i < array.length; i+=3) {
+    for (let i = 0; i < array.length; i += 3) {
             if ((Math.abs(array[i + 1]) == world.sphere.radius)) {}
             else if ((i % (world.sphere.widthSegments+1) == 0) || ((i + 3) % (world.sphere.widthSegments+1) == 0)) {
                 array[i] = originalPosition[i] + Math.cos(frameSphere + randomValues[0]) * 0.05
@@ -331,7 +343,7 @@ function animate() {
 
     //Updating light position relative to mouse position
     pointLight.position.set(mouse.x , mouse.y, world.pointLight.z);
-    sphere.rotation.x -= 0.004;
+    // sphere.rotation.x -= 0.004;
 
     // controls.update()
     renderer.render(scene, camera)
@@ -349,40 +361,6 @@ window.addEventListener('mousemove', (event) => {
     mouse.y = ((window.innerHeight / 2) - event.clientY) * threshold
 }, false);
 
-document.getElementById("portfolio").addEventListener('click', (event) => {
-    let tempCameraZoomValue = 20;
-    gsap.to(camera.position, {
-        y: sphere.position.y,
-        duration: 6,
-        ease: "power4",
-        onStart: () => {
-            gsap.to(camera.position, {
-                z: camera.position.z - tempCameraZoomValue, duration: 5
-            });
-            gsap.to(directionalLightTop, { intensity: 1, duration: 20 });
-            gsap.to(tempLight1, { intensity: 1, duration: 20 });
-            gsap.to(particleScene.position, { y: sphere.position.y, duration: 5 });
-        },
-        onComplete: () => {
-            gsap.to(camera.position, {
-                z: camera.position.z + tempCameraZoomValue,
-                duration: 5,
-            });
-        },
-    });
-
-    // document.querySelector("#intro").classList.add("hidden");
-    // document.querySelector("#work").classList.remove("hidden");
-    document.querySelector("#work").classList.toggle("hidden");
-    document.querySelector("#intro").classList.toggle("hidden");
-});
-
-Array.from(document.getElementsByClassName("work-readmore-btn")).forEach(element => {
-    element.addEventListener('click', (event) => {
-        document.querySelector("#specific").classList.toggle("hidden");
-        document.querySelector("#work").classList.toggle("hidden");
-    });
-});
 
 
 animate();
